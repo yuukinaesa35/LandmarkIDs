@@ -8,7 +8,6 @@ from geopy.geocoders import Nominatim
 from streamlit_folium import folium_static
 import cv2
 
-
 # Define the class names
 nama_class = ['Candi Borobudur', 'Gedung Sate', 'Istana Maimun', 'Jembatan Ampera', 'Monumen Nasional']
 
@@ -71,8 +70,7 @@ geolocator = Nominatim(user_agent="app")
 location = geolocator.geocode("Indonesia") # Initial location
 m = folium.Map(location=[location.latitude, location.longitude], zoom_start=5)
 
-# Add a file uploader and camera button to the app
-uploaded_file = st.file_uploader("Unggah gambar...", type=["jpg", "jpeg", "png"])
+# Add a camera button to the app
 use_camera = st.button("Gunakan Kamera")
 
 if use_camera:
@@ -80,10 +78,8 @@ if use_camera:
     cap = cv2.VideoCapture(0)
     # Capture an image from the camera
     ret, frame = cap.read()
-    # Encode the image as a JPEG file in memory
-    _, img_bytes = cv2.imencode(".jpg", frame)
-    # Create a PIL Image object from the image bytes
-    image = Image.open(io.BytesIO(img_bytes))
+    # Convert the image to PIL format
+    image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
     # Show the captured image
     st.image(image, caption='Gambar dari Kamera', use_column_width=True)
     # Make a prediction
@@ -111,32 +107,35 @@ if use_camera:
         # Update the map
         folium_static(m, width=700, height=500)
 
-elif uploaded_file is not None:
-    # Read the image
-    image = Image.open(uploaded_file)
-    # Show the image
-    st.image(image, caption='Unggah Gambar', use_column_width=True)
-    # Make a prediction
-    prediction = predict(image)
-    if prediction is not None:
-        predicted_class, predicted_prob, probabilities = prediction
-        # Show the predicted class and probability
-        st.write("Predicted class:", predicted_class)
-        st.write("Probability:", predicted_prob, "%")
-        # Show the probabilities for each class
-        for class_name, prob in zip(nama_class, probabilities):
-            st.write(class_name, ":", prob, "%")
-        # Get the location of the predicted class
-        class_location = class_locations[predicted_class]
-        # Add a marker to the map
-        folium.Marker(
-            location=[class_location['Latitude'], class_location['Longitude']],
-            popup=class_location['name'],
-            icon=folium.Icon(color='red', icon='info-sign')
-        ).add_to(m)
-        # Zoom to the location
-        m.fit_bounds([[class_location['Latitude'], class_location['Longitude']]])
-        # Show the class location
-        st.write("Address:", class_location)
-        # Update the map
-        folium_static(m, width=700, height=500)
+else:
+    # Add a file uploader to the app
+    uploaded_file = st.file_uploader("Unggah gambar...", type=["jpg", "jpeg", "png"])
+    if uploaded_file is not None:
+        # Read the image
+        image = Image.open(uploaded_file)
+        # Show the image
+        st.image(image, caption='Unggah Gambar', use_column_width=True)
+        # Make a prediction
+        prediction = predict(image)
+        if prediction is not None:
+            predicted_class, predicted_prob, probabilities = prediction
+            # Show the predicted class and probability
+            st.write("Predicted class:", predicted_class)
+            st.write("Probability:", predicted_prob, "%")
+            # Show the probabilities for each class
+            for class_name, prob in zip(nama_class, probabilities):
+                st.write(class_name, ":", prob, "%")
+            # Get the location of the predicted class
+            class_location = class_locations[predicted_class]
+            # Add a marker to the map
+            folium.Marker(
+                location=[class_location['Latitude'], class_location['Longitude']],
+                popup=class_location['name'],
+                icon=folium.Icon(color='red', icon='info-sign')
+            ).add_to(m)
+            # Zoom to the location
+            m.fit_bounds([[class_location['Latitude'], class_location['Longitude']]])
+            # Show the class location
+            st.write("Address:", class_location)
+            # Update the map
+            folium_static(m, width=700, height=500)
