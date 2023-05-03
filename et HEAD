@@ -1,0 +1,29 @@
+[33mcommit 8108e5174eb8080f45b7132df5acb808ac314ab6[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m
+Date:   Tue Apr 18 19:57:20 2023 +0700
+
+    large file to github
+
+[33mcommit a7922af31c0bf212147d72187e5752e7ed39d955[m
+Date:   Tue Apr 18 19:54:56 2023 +0700
+
+    Create model - Copy.h5
+
+[33mcommit 63dbef6dbc3f515d2a46b8f3fcb6f20e5dcc11c9[m
+Date:   Tue Apr 18 19:53:32 2023 +0700
+
+    Create .gitattributes
+
+[33mcommit e10557e4e0782451581a20d00fef36726e473a8d[m
+Date:   Tue Apr 18 19:44:08 2023 +0700
+
+    Add large file using Git LFS
+
+[33mcommit 66b9f4c1d6a8132e1709f033d88591bb62abd670[m
+Date:   Tue Apr 18 19:40:33 2023 +0700
+
+    add model.h5
+
+[33mcommit 1e733481ca075e5782e397d279e3c02118e745d9[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Date:   Tue Apr 18 19:35:23 2023 +0700
+
+    Create app.py
