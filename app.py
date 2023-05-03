@@ -7,6 +7,8 @@ import folium
 from geopy.geocoders import Nominatim
 from streamlit_folium import folium_static
 import cv2
+import os
+os.makedirs("/app/landmarkclassification", exist_ok=True)
 
 # Define the class names
 nama_class = ['Candi Borobudur', 'Gedung Sate', 'Istana Maimun', 'Jembatan Ampera', 'Monumen Nasional']
