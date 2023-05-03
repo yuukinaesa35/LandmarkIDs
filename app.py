@@ -80,10 +80,10 @@ if use_camera:
     cap = cv2.VideoCapture(0)
     # Capture an image from the camera
     ret, frame = cap.read()
-    # Save the captured image to a file
-    cv2.imwrite("camera_image.jpg", frame)
-    # Read the saved image file
-    image = Image.open("camera_image.jpg")
+    # Encode the image as a JPEG file in memory
+    _, img_bytes = cv2.imencode(".jpg", frame)
+    # Create a PIL Image object from the image bytes
+    image = Image.open(io.BytesIO(img_bytes))
     # Show the captured image
     st.image(image, caption='Gambar dari Kamera', use_column_width=True)
     # Make a prediction
