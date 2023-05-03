@@ -67,7 +67,7 @@ st.write("Unggah gambar dan aplikasi akan mengklasifikasikannya ke dalam salah s
 st.write(nama_class)
 
 # Add a map to the app
-geolocator = Nominatim(user_agent="app")
+geolocator = Nominatim(user_agent="Landmark", timeout=10)
 location = geolocator.geocode("Indonesia") # Initial location
 m = folium.Map(location=[location.latitude, location.longitude], zoom_start=5)
 
