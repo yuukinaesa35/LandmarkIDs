@@ -7,8 +7,7 @@ import folium
 from geopy.geocoders import Nominatim
 from streamlit_folium import folium_static
 import cv2
-import os
-os.makedirs("/app/landmarkclassification", exist_ok=True)
+
 
 # Define the class names
 nama_class = ['Candi Borobudur', 'Gedung Sate', 'Istana Maimun', 'Jembatan Ampera', 'Monumen Nasional']
@@ -82,9 +81,9 @@ if use_camera:
     # Capture an image from the camera
     ret, frame = cap.read()
     # Save the captured image to a file
-    cv2.imwrite("/app/landmarkclassification/camera_image.jpg", frame)
+    cv2.imwrite("/tmp/camera_image.jpg", frame)
     # Read the saved image file
-    image = Image.open("/app/landmarkclassification/camera_image.jpg")
+    image = Image.open("/tmp/camera_image.jpg")
     # Show the captured image
     st.image(image, caption='Gambar dari Kamera', use_column_width=True)
     # Make a prediction
