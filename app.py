@@ -61,10 +61,11 @@ def predict(image):
         return None
 
 # Set up the Streamlit app
-st.set_page_config(page_title="Image Classification", page_icon=":smiley:")
+st.set_page_config(page_title="Image Classification", page_icon=":🏛️:")
 st.title("Klasifikasi Landmark")
 st.write("Unggah gambar dan aplikasi akan mengklasifikasikannya ke dalam salah satu kelas berikut:")
 st.write(nama_class)
+
 
 # Add a map to the app
 geolocator = Nominatim(user_agent="Landmark", timeout=10)
