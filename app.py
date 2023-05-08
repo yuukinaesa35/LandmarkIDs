@@ -61,10 +61,11 @@ def predict(image):
         return None
 
 # Set up the Streamlit app
+array_color = '#00FFAB'
 st.set_page_config(page_title="Image Classification", page_icon=":🏛️:")
 st.title("Klasifikasi Landmark")
 st.write("Unggah gambar dan aplikasi akan mengklasifikasikannya ke dalam salah satu kelas berikut:")
-st.write(nama_class)
+st.write(f'<span style="color:{array_color}">{nama_class}</span>', unsafe_allow_html=True)
 
 
 # Add a map to the app
