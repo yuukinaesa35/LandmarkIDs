@@ -10,3 +10,4 @@ av
 streamlit-webrtc
 opencv-python-headless
 opencv_contrib_python
+libopencv
