@@ -7,7 +7,7 @@ geopy
 streamlit-folium
 opencv-python
 av
-streamlit-webrtc
+streamlit-webrtc==0.35.0
 opencv-python-headless
 opencv_contrib_python
 libopencv
