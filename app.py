@@ -7,6 +7,8 @@ import folium
 from geopy.geocoders import Nominatim
 from streamlit_folium import folium_static
 import cv2
+import av
+import streamlit_webrtc as webrtc
 
 # Define the class names
 nama_class = ['Candi Borobudur', 'Gedung Sate', 'Istana Maimun', 'Jembatan Ampera', 'Monumen Nasional']
@@ -15,13 +17,13 @@ nama_class = ['Candi Borobudur', 'Gedung Sate', 'Istana Maimun', 'Jembatan Amper
 class_locations = {
     'Candi Borobudur': {'name': 'Candi Borobudur', 'Latitude': -7.60788, 'Longitude': 110.20367, 'city' : 'Magelang',
                         'desc': '991.'},
-	'Gedung Sate': {'name': 'Gedung Sate', 'Latitude': -6.90249, 'Longitude': 107.61872, 'city' : 'Bandung',
+    'Gedung Sate': {'name': 'Gedung Sate', 'Latitude': -6.90249, 'Longitude': 107.61872, 'city' : 'Bandung',
                     'desc': 'Gon.'},
-	'Istana Maimun': {'name': 'Istana Maimun', 'Latitude': 3.5752, 'Longitude': 98.6837, 'city' : 'Medan',
+    'Istana Maimun': {'name': 'Istana Maimun', 'Latitude': 3.5752, 'Longitude': 98.6837, 'city' : 'Medan',
                       'desc': 'Isge.'},
     'Jembatan Ampera': {'name': 'Jembatan Ampera', 'Latitude': -2.99178, 'Longitude': 104.76354, 'city' : 'Palembang',
                         'desc': 'Jee.'},
-	'Monumen Nasional': {'name': 'Monumen Nasional', 'Latitude': -6.1754, 'Longitude': 106.8272, 'city' : 'Jakarta',
+    'Monumen Nasional': {'name': 'Monumen Nasional', 'Latitude': -6.1754, 'Longitude': 106.8272, 'city' : 'Jakarta',
                          'desc': 'Moia.'},
 }
 
@@ -70,19 +72,10 @@ geolocator = Nominatim(user_agent="app")
 location = geolocator.geocode("Indonesia") # Initial location
 m = folium.Map(location=[location.latitude, location.longitude], zoom_start=5)
 
-# Add a file uploader and camera button to the app
-uploaded_file = st.file_uploader("Unggah gambar...", type=["jpg", "jpeg", "png"])
-use_camera = st.button("Gunakan Kamera")
-
-if use_camera:
-    # Create a VideoCapture object to capture images from camera
-    cap = cv2.VideoCapture(0)
-    # Capture an image from the camera
-    ret, frame = cap.read()
-    # Save the captured image to a file
-    cv2.imwrite("camera_image.jpg", frame)
-    # Read the saved image file
-    image = Image.open("camera_image.jpg")
+# Define the video processing callback
+def process_image(image):
+    # Convert the image to PIL format
+    image = Image.fromarray(image.to_ndarray(format="bgr24"))
     # Show the captured image
     st.image(image, caption='Gambar dari Kamera', use_column_width=True)
     # Make a prediction
@@ -110,7 +103,19 @@ if use_camera:
         # Update the map
         folium_static(m, width=700, height=500)
 
-elif uploaded_file is not None:
+# Add a video recorder to the app
+webrtc_stream = webrtc.VideoTransformer(
+    source_buffer_length=10,
+    process_func=process_image,
+    async_processing=True
+)
+webrtc_ctx = webrtc_stream._ctx
+video_recorder = webrtc.VideoRecorder(stream=webrtc_ctx.media_stream)
+
+# Add a file uploader to the app
+uploaded_file = st.file_uploader("Unggah gambar...", type=["jpg", "jpeg", "png"])
+
+if uploaded_file is not None:
     # Read the image
     image = Image.open(uploaded_file)
     # Show the image
@@ -139,3 +144,6 @@ elif uploaded_file is not None:
         st.write("Address:", class_location)
         # Update the map
         folium_static(m, width=700, height=500)
+
+# Add the video recorder to the app
+video_recorder.recording_loop()
