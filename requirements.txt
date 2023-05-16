@@ -5,9 +5,9 @@ numpy
 folium
 geopy
 streamlit-folium
-opencv-python==4.5.4.58
+opencv-python
 av
-streamlit-webrtc==0.35.0
+streamlit-webrtc
 opencv-python-headless
 opencv_contrib_python
 libopencv
