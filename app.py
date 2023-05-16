@@ -1,141 +1,66 @@
 import streamlit as st
-import tensorflow as tf
-from tensorflow.keras.models import load_model
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, WebRtcMode
 from PIL import Image
 import numpy as np
-import folium
-from geopy.geocoders import Nominatim
-from streamlit_folium import folium_static
-import cv2
+from keras.models import load_model
+import io
+from urllib.request import urlopen
 
-# Define the class names
-nama_class = ['Candi Borobudur', 'Gedung Sate', 'Istana Maimun', 'Jembatan Ampera', 'Monumen Nasional']
+def draw_text(image, text, position):
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 1
+    color = (0, 255, 0)
+    thickness = 2
+    cv2.putText(image, text, position, font, font_scale, color, thickness)
 
-# Define the locations of each class
-class_locations = {
-    'Candi Borobudur': {'name': 'Candi Borobudur', 'Latitude': -7.60788, 'Longitude': 110.20367, 'city' : 'Magelang',
-                        'desc': '991.'},
-	'Gedung Sate': {'name': 'Gedung Sate', 'Latitude': -6.90249, 'Longitude': 107.61872, 'city' : 'Bandung',
-                    'desc': 'Gon.'},
-	'Istana Maimun': {'name': 'Istana Maimun', 'Latitude': 3.5752, 'Longitude': 98.6837, 'city' : 'Medan',
-                      'desc': 'Isge.'},
-    'Jembatan Ampera': {'name': 'Jembatan Ampera', 'Latitude': -2.99178, 'Longitude': 104.76354, 'city' : 'Palembang',
-                        'desc': 'Jee.'},
-	'Monumen Nasional': {'name': 'Monumen Nasional', 'Latitude': -6.1754, 'Longitude': 106.8272, 'city' : 'Jakarta',
-                         'desc': 'Moia.'},
-}
-
-# Load the model
-model = load_model('model.h5')
-
-# Function to preprocess the image
 def preprocess_image(image):
-    img = image.resize((224, 224))
-    img = np.array(img)
-    img = img / 255.0
-    img = np.expand_dims(img, axis=0)
-    return img
+    # Resize the image
+    image = image.resize((224, 224))
+    # Convert the image to an array
+    img_array = np.array(image)
+    # Scale the pixel values to the range [0, 1]
+    img_array = img_array / 255.0
+    # Expand the dimensions of the array to create a batch of size 1
+    img_batch = np.expand_dims(img_array, axis=0)
+    # Return the preprocessed image
+    return img_batch
 
-# Define the prediction function
-def predict(image):
-    try:
+class VideoTransformer(VideoTransformerBase):
+    def __init__(self):
+        self.model = load_model('model.h5')
+        self.class_names = ['Candi Borobudur', 'Gedung Sate', 'Istana Maimun', 'Jembatan Ampera', 'Monumen Nasional']
+        self.class_locations = {
+            'Candi Borobudur': {'name': 'Candi Borobudur', 'Latitude': -7.60788, 'Longitude': 110.20367, 'city' : 'Magelang', 'desc': '991.'},
+            'Gedung Sate': {'name': 'Gedung Sate', 'Latitude': -6.90249, 'Longitude': 107.61872, 'city' : 'Bandung', 'desc': 'Gon.'},
+            'Istana Maimun': {'name': 'Istana Maimun', 'Latitude': 3.5752, 'Longitude': 98.6837, 'city' : 'Medan', 'desc': 'Isge.'},
+            'Jembatan Ampera': {'name': 'Jembatan Ampera', 'Latitude': -2.99178, 'Longitude': 104.76354, 'city' : 'Palembang', 'desc': 'Jee.'},
+            'Monumen Nasional': {'name': 'Monumen Nasional', 'Latitude': -6.1754, 'Longitude': 106.8272, 'city' : 'Jakarta', 'desc': 'Moia.'},
+        }
+
+    def transform(self, frame):
+        # Convert the frame to an image
+        image = frame.to_ndarray(format='bgr24')
         # Preprocess the image
-        img = preprocess_image(image)
+        img = preprocess_image(Image.fromarray(image))
         # Predict the class probabilities
-        probabilities = model.predict(img)[0]
+        probabilities = self.model.predict(img)[0]
         # Get the predicted class index
         predicted_class_idx = np.argmax(probabilities)
         # Get the predicted class name
-        predicted_class = nama_class[predicted_class_idx]
-        # Get the probability of the predicted class
-        predicted_prob = probabilities[predicted_class_idx]
-        # Convert the probability to a percentage
-        predicted_prob_pct = round(predicted_prob * 100, 2)
-        # Convert the probabilities to percentages
-        probabilities_pct = [round(prob * 100, 2) for prob in probabilities]
-        # Return the predicted class name and probabilities
-        return (predicted_class, predicted_prob_pct, probabilities_pct)
-    except:
-        # Return None if the image cannot be processed
-        return None
+        predicted_class_name = self.class_names[predicted_class_idx]
+        # Get the predicted class location
+        predicted_class_location = self.class_locations[predicted_class_name]
+        # Draw the predicted class name and location on the image
+        draw_text(image, predicted_class_name, (10, 30))
+        draw_text(image, predicted_class_location['city'], (10, 60))
+        draw_text(image, predicted_class_location['desc'], (10, 90))
+        # Return the annotated image
+        return image
 
-# Set up the Streamlit app
-st.set_page_config(page_title="Image Classification", page_icon=":smiley:")
-st.title("Klasifikasi Landmark")
-st.write("Unggah gambar atau gunakan kamera untuk mengklasifikasikan landmark ke dalam salah satu kelas berikut:")
-st.write(nama_class)
+def main():
+    st.title("Landmark Recognition App")
+    st.write("Please allow access to your camera to start the app.")
+    webrtc_streamer(key="example", mode=WebRtcMode.SENDRECV, video_transformer_factory=VideoTransformer)
 
-# Add a map to the app
-geolocator = Nominatim(user_agent="app")
-location = geolocator.geocode("Indonesia") # Initial location
-m = folium.Map(location=[location.latitude, location.longitude], zoom_start=5)
-
-# Add a file uploader and camera button to the app
-uploaded_file = st.file_uploader("Unggah gambar...", type=["jpg", "jpeg", "png"])
-use_camera = st.button("Gunakan Kamera")
-
-if use_camera:
-    # Create a VideoCapture object to capture images from camera
-    cap = cv2.VideoCapture(1)
-    # Capture an image from the camera
-    ret, frame = cap.read()
-    # Save the captured image to a file
-    cv2.imwrite("camera_image.jpg", frame)
-    # Read the saved image file
-    image = Image.open("camera_image.jpg")
-    # Show the captured image
-    st.image(image, caption='Gambar dari Kamera', use_column_width=True)
-    # Make a prediction
-    prediction = predict(image)
-    if prediction is not None:
-        predicted_class, predicted_prob, probabilities = prediction
-        # Show the predicted class and probability
-        st.write("Predicted class:", predicted_class)
-        st.write("Probability:", predicted_prob, "%")
-        # Show the probabilities for each class
-        for class_name, prob in zip(nama_class, probabilities):
-            st.write(class_name, ":", prob, "%")
-        # Get the location of the predicted class
-        class_location = class_locations[predicted_class]
-        # Add a marker to the map
-        folium.Marker(
-            location=[class_location['Latitude'], class_location['Longitude']],
-            popup=class_location['name'],
-            icon=folium.Icon(color='red', icon='info-sign')
-        ).add_to(m)
-        # Zoom to the location
-        m.fit_bounds([[class_location['Latitude'], class_location['Longitude']]])
-        # Show the class location
-        st.write("Address:", class_location)
-        # Update the map
-        folium_static(m, width=700, height=500)
-
-elif uploaded_file is not None:
-    # Read the image
-    image = Image.open(uploaded_file)
-    # Show the image
-    st.image(image, caption='Unggah Gambar', use_column_width=True)
-    # Make a prediction
-    prediction = predict(image)
-    if prediction is not None:
-        predicted_class, predicted_prob, probabilities = prediction
-        # Show the predicted class and probability
-        st.write("Predicted class:", predicted_class)
-        st.write("Probability:", predicted_prob, "%")
-        # Show the probabilities for each class
-        for class_name, prob in zip(nama_class, probabilities):
-            st.write(class_name, ":", prob, "%")
-        # Get the location of the predicted class
-        class_location = class_locations[predicted_class]
-        # Add a marker to the map
-        folium.Marker(
-            location=[class_location['Latitude'], class_location['Longitude']],
-            popup=class_location['name'],
-            icon=folium.Icon(color='red', icon='info-sign')
-        ).add_to(m)
-        # Zoom to the location
-        m.fit_bounds([[class_location['Latitude'], class_location['Longitude']]])
-        # Show the class location
-        st.write("Address:", class_location)
-        # Update the map
-        folium_static(m, width=700, height=500)
+if __name__ == '__main__':
+    main()
