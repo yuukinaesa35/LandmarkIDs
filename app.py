@@ -6,7 +6,6 @@ import numpy as np
 import folium
 from geopy.geocoders import Nominatim
 from streamlit_folium import folium_static
-import streamlit_webrtc as webrtc
 
 # Define the class names
 nama_class = ['Candi Borobudur', 'Gedung Sate', 'Istana Maimun', 'Jembatan Ampera', 'Monumen Nasional']
@@ -24,6 +23,8 @@ class_locations = {
 	'Monumen Nasional': {'name': 'Monumen Nasional', 'Latitude': -6.1754, 'Longitude': 106.8272, 'city' : 'Jakarta',
                          'desc': 'Monumen Nasional is a monument located in the center of Merdeka Square, Central Jakarta, Indonesia. The monument was built in 1961 to commemorate the struggle for Indonesian independence. The monument stands at a height of 132 meters and is topped by a flame covered in gold foil. Visitors can take an elevator to the top of the monument and enjoy a panoramic view of Jakarta. The monument is surrounded by a park and various museums that showcase the history and culture of Indonesia.'},
 }
+
+
 
 # Load the model
 model = load_model('model.h5')
@@ -63,70 +64,47 @@ def predict(image):
 array_color = '#00FFAB'
 st.set_page_config(page_title="Image Classification", page_icon=":🏛️:")
 st.title("Klasifikasi Landmark")
-st.write("Unggah gambar atau gunakan webcam untuk mengambil gambar")
+st.write("Unggah gambar dan aplikasi akan mengklasifikasikannya ke dalam salah satu kelas berikut:")
+st.write(f'<span style="color:{array_color}">{nama_class}</span>', unsafe_allow_html=True)
 
-# Define the WebRTC streamer
-webrtc_ctx = webrtc.StreamerRTC(
-    # Add the audio and video constraints
-    audio=False,
-    video=True,
-    # Define the video transformer class
-    video_transformer_factory=lambda: VideoTransformer(predict),
-    # Set the height of the video display
-    async_transform=False,
-    height=480,
-    key="landmark"
-)
 
-# Define the function to display the prediction
-def display_prediction(image, predicted_class, predicted_prob_pct):
+# Add a map to the app
+geolocator = Nominatim(user_agent="Landmark", timeout=10)
+location = geolocator.geocode("Indonesia") # Initial location
+m = folium.Map(location=[location.latitude, location.longitude], zoom_start=5)
+
+
+# Add a file uploader to the app
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+
+if uploaded_file is not None:
+    # Read the image
+    image = Image.open(uploaded_file)
     # Show the image
-    st.image(image, use_column_width=True)
-    # Show the predicted class and probability
-    st.write("Kelas yang diprediksi: **{}** dengan probabilitas **{}%**".format(predicted_class, predicted_prob_pct))
-    # Show the location of the predicted class on a map
-    predicted_location = class_locations.get(predicted_class)
-    geolocator = Nominatim(user_agent="landmark_map")
-    location = geolocator.geocode(predicted_location.get('city'))
-    m = folium.Map(location=[location.latitude, location.longitude], zoom_start=15)
-    tooltip = predicted_location.get('name')
-    folium.Marker([predicted_location.get('Latitude'), predicted_location.get('Longitude')], popup=predicted_location.get('desc'), tooltip=tooltip).add_to(m)
-    folium_static(m)
+    st.image(image, caption='Uploaded Image.', use_column_width=True)
+    # Make a prediction
+    prediction = predict(image)
+    if prediction is not None:
+        predicted_class, predicted_prob, probabilities = prediction
+        # Show the predicted class and probability
+        st.write("Predicted class:", predicted_class)
+        st.write("Probability:", predicted_prob, "%")
+        # Show the probabilities for each class
+        for class_name, prob in zip(nama_class, probabilities):
+            st.write(class_name, ":", prob, "%")
+        # Get the location of the predicted class
+        class_location = class_locations[predicted_class]
+        # Add a marker to the map
+        folium.Marker(
+            location=[class_location['Latitude'], class_location['Longitude']],
+            popup=class_location['name'],
+            icon=folium.Icon(color='red', icon='info-sign')
+        ).add_to(m)
+        # Zoom to the location
+        m.fit_bounds([[class_location['Latitude'], class_location['Longitude']]])
+		# Show the class location
 
-# Define the main app
-def app():
-    # Show the WebRTC streamer
-    webrtc_streamer = webrtc_ctx._ctx.__dict__["media_stream"]
-    st.write("Webcam")
-    st.write(webrtc_streamer)
-    # Get the video frame from the streamer
-    if webrtc_streamer:
-        video_frame = webrtc_streamer.get_frame()
-        # Check if the video frame exists
-        if video_frame is not None:
-            # Convert the video frame to an image
-            image = Image.fromarray(np.uint8(video_frame[:, :, ::-1]))
-            # Get the prediction
-            prediction = predict(image)
-            # Check if the prediction exists
-            if prediction is not None:
-                # Display the prediction
-                predicted_class, predicted_prob_pct, probabilities_pct = prediction
-                display_prediction(image, predicted_class, predicted_prob_pct)
-                # Show the class probabilities
-                st.write("Probabilitas kelas:")
-                for i, class_name in enumerate(nama_class):
-                    st.write("- {}: {}%".format(class_name, probabilities_pct[i]))
-            else:
-                # Show a message if the image cannot be processed
-                st.write("Gambar tidak dapat diproses")
-        else:
-            # Show a message if the video frame is None
-            st.write("Tidak ada gambar yang ditangkap dari webcam")
-    else:
-        # Show a message if the streamer is None
-        st.write("Webcam tidak terdeteksi")
+        st.write("Address:", class_location)
 
-# Run the app
-if __name__ == "__main__":
-    app()
+        # Update the map
+        folium_static(m, width=700, height=500)
