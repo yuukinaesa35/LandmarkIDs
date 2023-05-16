@@ -76,7 +76,7 @@ use_camera = st.button("Gunakan Kamera")
 
 if use_camera:
     # Create a VideoCapture object to capture images from camera
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     # Capture an image from the camera
     ret, frame = cap.read()
     # Save the captured image to a file
