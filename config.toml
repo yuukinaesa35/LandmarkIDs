@@ -1,6 +1,6 @@
 [server]
 port = 80
-headless = false
+headless = true
 [theme]
 primaryColor="#864879"
 backgroundColor="#1f1d36"
