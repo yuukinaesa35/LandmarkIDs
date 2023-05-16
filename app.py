@@ -66,10 +66,16 @@ st.title("Klasifikasi Landmark")
 st.write("Unggah gambar atau gunakan webcam untuk mengambil gambar")
 
 # Define the WebRTC streamer
-webrtc_streamer = webrtc.VideoTransformer(
-    src_size=(480, 640),
-    # Function to transform the video frames
-    transform_func=lambda frame: predict(Image.fromarray(frame))
+webrtc_ctx = webrtc.StreamerRTC(
+    # Add the audio and video constraints
+    audio=False,
+    video=True,
+    # Define the video transformer class
+    video_transformer_factory=lambda: VideoTransformer(predict),
+    # Set the height of the video display
+    async_transform=False,
+    height=480,
+    key="landmark"
 )
 
 # Define the function to display the prediction
@@ -84,30 +90,43 @@ def display_prediction(image, predicted_class, predicted_prob_pct):
     location = geolocator.geocode(predicted_location.get('city'))
     m = folium.Map(location=[location.latitude, location.longitude], zoom_start=15)
     tooltip = predicted_location.get('name')
-    folium.Marker([predicted_location.get('Latitude'), predicted_location.get('Longitude')], tooltip=tooltip, popup='<strong>{}</strong>'.format(predicted_location.get('desc'))).add_to(m)
+    folium.Marker([predicted_location.get('Latitude'), predicted_location.get('Longitude')], popup=predicted_location.get('desc'), tooltip=tooltip).add_to(m)
     folium_static(m)
 
 # Define the main app
-def main():
-    # Add a file uploader to upload an image
-    uploaded_file = st.file_uploader("Unggah gambar", type=["jpg","jpeg","png"])
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file)
-        # Predict the class and probabilities
-        prediction = predict(image)
-        if prediction is not None:
-            predicted_class, predicted_prob_pct, probabilities_pct = prediction
-            # Display the prediction
-            display_prediction(image, predicted_class, predicted_prob_pct)
-            # Show the probabilities for all classes
-            st.write("Probabilitas untuk semua kelas:")
-            for i, prob in enumerate(probabilities_pct):
-                st.write("{}: {}%".format(nama_class[i], prob))
+def app():
+    # Show the WebRTC streamer
+    webrtc_streamer = webrtc_ctx._ctx.__dict__["media_stream"]
+    st.write("Webcam")
+    st.write(webrtc_streamer)
+    # Get the video frame from the streamer
+    if webrtc_streamer:
+        video_frame = webrtc_streamer.get_frame()
+        # Check if the video frame exists
+        if video_frame is not None:
+            # Convert the video frame to an image
+            image = Image.fromarray(np.uint8(video_frame[:, :, ::-1]))
+            # Get the prediction
+            prediction = predict(image)
+            # Check if the prediction exists
+            if prediction is not None:
+                # Display the prediction
+                predicted_class, predicted_prob_pct, probabilities_pct = prediction
+                display_prediction(image, predicted_class, predicted_prob_pct)
+                # Show the class probabilities
+                st.write("Probabilitas kelas:")
+                for i, class_name in enumerate(nama_class):
+                    st.write("- {}: {}%".format(class_name, probabilities_pct[i]))
+            else:
+                # Show a message if the image cannot be processed
+                st.write("Gambar tidak dapat diproses")
         else:
-            st.write("Gambar tidak dapat diproses")
+            # Show a message if the video frame is None
+            st.write("Tidak ada gambar yang ditangkap dari webcam")
     else:
-        # Show the WebRTC streamer
-        webrtc_streamer()
+        # Show a message if the streamer is None
+        st.write("Webcam tidak terdeteksi")
 
-if __name__ == '__main__':
-    main()
+# Run the app
+if __name__ == "__main__":
+    app()
