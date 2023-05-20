@@ -6,8 +6,8 @@ import numpy as np
 import folium
 from geopy.geocoders import Nominatim
 from streamlit_folium import folium_static
-from streamlit_card import card
-from streamlit_extras.badges import badge
+
+
 model = load_model('model.h5')
 
 # Define the class names
