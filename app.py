@@ -64,17 +64,18 @@ def predict(image):
 
 
 def cara_penggunaan():
-    st.title("Cara Penggunaan")
+    st.title("Selamat datang di web aplikasi klasifikasi landmark 👋")
+    st.write("")
     st.write("Berikut ini adalah cara penggunaan aplikasi klasifikasi landmark:")
-    st.write("1. Pilih menu yang berada pada sidebar sebelah kiri untuk berpindah ke aplikasi utama")
+    st.write("1. Pilih menu yang berada pada sidebar sebelah kiri untuk berpindah ke aplikasi utama 👈")
     st.write("2. Unggah gambar landmark dengan cara klik browse file.")
-    st.write("3. Aplikasi ini akan mulai memprediksi landmark yang telah di unggah")
+    st.write("3. Aplikasi ini akan mulai memprediksi landmark yang telah di unggah. ")
     st.write("4. Aplikasi akan menampilkan probabilitas dari landmark yang diprediksi.")
-    st.write("5. Aplikasi akan menampilkan lokasi landmark yang diprediksi pada peta.")
+    st.write("5. Aplikasi akan menampilkan lokasi landmark yang diprediksi pada peta. ")
 
     st.sidebar.success('''
     Jika sudah membaca cara penggunaan. \n
-    Silahkan pilih menu untuk berpindah ke aplikasi utama
+    Silahkan pilih menu untuk berpindah ke aplikasi utama ✅
     ''')
 
 # Define the mapping demo function
