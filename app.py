@@ -6,6 +6,8 @@ import numpy as np
 import folium
 from geopy.geocoders import Nominatim
 from streamlit_folium import folium_static
+from streamlit_card import card
+from streamlit_extras.badges import badge
 model = load_model('model.h5')
 
 # Define the class names
@@ -61,22 +63,65 @@ def predict(image):
         # Return None if the image cannot be processed
         return None
 
+def tentang_aplikasi():
+    st.title("Tentang Aplikasi")
+    st.write("Aplikasi ini dibuat dengan tujuan untuk memajukan pariwisata Indonesia.")
+    st.write("Sehingga wisatawan lokal dan mancanegara dapat mengetahui landmark apa saja yang ada di Indonesia.✨")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def cara_penggunaan():
     st.title("Selamat datang di web aplikasi klasifikasi landmark 👋")
+    st.write("Cara penggunaan: ")
     st.write("")
-    st.write("Berikut ini adalah cara penggunaan aplikasi klasifikasi landmark:")
-    st.write("1. Pilih menu yang berada pada sidebar sebelah kiri untuk berpindah ke aplikasi utama 👈")
-    st.write("2. Unggah gambar landmark dengan cara klik browse file.")
-    st.write("3. Aplikasi ini akan mulai memprediksi landmark yang telah di unggah. ")
-    st.write("4. Aplikasi akan menampilkan probabilitas dari landmark yang diprediksi.")
-    st.write("5. Aplikasi akan menampilkan lokasi landmark yang diprediksi pada peta. ")
+    # Define the custom CSS class for the instructions
+    st.markdown(
+        """
+        <style>
+        .rounded-instructions {
+            border-radius: 10px;
+            box-shadow: 3px 3px 5px #999;
+            padding: 20px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Display the instructions with the custom CSS class
+    st.markdown(
+        """
+        <div class="rounded-instructions">
+        <p>1. Pilih menu yang berada pada sidebar sebelah kiri untuk berpindah ke aplikasi utama 👈</p>
+        <p>2. Unggah gambar landmark dengan cara klik browse file.</p>
+        <p>3. Aplikasi ini akan mulai memprediksi landmark yang telah di unggah.</p>
+            <p>4. Aplikasi akan menampilkan probabilitas dari landmark yang diprediksi.</p>
+        <p>5. Aplikasi akan menampilkan lokasi landmark yang diprediksi pada peta.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 
     st.sidebar.success('''
     Jika sudah membaca cara penggunaan. \n
     Silahkan pilih menu untuk berpindah ke aplikasi utama ✅
     ''')
+
+
 
 # Define the mapping demo function
 def aplikasi_utama():
@@ -89,10 +134,13 @@ def aplikasi_utama():
     location = geolocator.geocode("Indonesia") # Initial location
     m = folium.Map(location=[location.latitude, location.longitude], zoom_start=5)
 
+
+
     st.title("Klasifikasi Landmark")
-    st.write("Unggah gambar dan aplikasi akan mengklasifikasikannya ke dalam salah satu kelas berikut:")
-    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+    st.write("Unggah gambar dan aplikasi akan mengklasifikasikannya ke dalam salah satu landmark berikut: 👇")
     st.write(f'<span style="color:{array_color}">{nama_class}</span>', unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+
 
 
 
@@ -136,7 +184,8 @@ def aplikasi_utama():
 
 page_names_to_funcs = {
     "Cara Penggunaan": cara_penggunaan,
-    "Aplikasi Utama": aplikasi_utama
+    "Aplikasi Utama": aplikasi_utama,
+    "Tentang Aplikasi": tentang_aplikasi
 }
 
 demo_name = st.sidebar.selectbox("Menu", page_names_to_funcs.keys())
