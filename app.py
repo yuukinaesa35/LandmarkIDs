@@ -7,9 +7,6 @@ import folium
 from geopy.geocoders import Nominatim
 from streamlit_folium import folium_static
 
-
-model = load_model('model.h5')
-
 # Define the class names
 nama_class = ['Candi Borobudur', 'Gedung Sate', 'Istana Maimun', 'Jembatan Ampera', 'Monumen Nasional']
 
@@ -29,10 +26,10 @@ class_locations = {
 
 
 
+# Load the model
+model = load_model('model.h5')
 
-
-
-    # Function to preprocess the image
+# Function to preprocess the image
 def preprocess_image(image):
     img = image.resize((224, 224))
     img = np.array(img)
@@ -63,130 +60,51 @@ def predict(image):
         # Return None if the image cannot be processed
         return None
 
-def tentang_aplikasi():
-    st.title("Tentang Aplikasi")
-    st.write("Aplikasi ini dibuat dengan tujuan untuk memajukan pariwisata Indonesia.")
-    st.write("Sehingga wisatawan lokal dan mancanegara dapat mengetahui landmark apa saja yang ada di Indonesia.✨")
+# Set up the Streamlit app
+array_color = '#00FFAB'
+st.set_page_config(page_title="Image Classification", page_icon=":🏛️:")
+st.title("Klasifikasi Landmark")
+st.write("Unggah gambar dan aplikasi akan mengklasifikasikannya ke dalam salah satu kelas berikut:")
+st.write(f'<span style="color:{array_color}">{nama_class}</span>', unsafe_allow_html=True)
 
 
+# Add a map to the app
+geolocator = Nominatim(user_agent="Landmark", timeout=10)
+location = geolocator.geocode("Indonesia") # Initial location
+m = folium.Map(location=[location.latitude, location.longitude], zoom_start=5)
 
 
+# Add a file uploader to the app
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
+if uploaded_file is not None:
+    # Read the image
+    image = Image.open(uploaded_file)
+    # Show the image
+    st.image(image, caption='Uploaded Image.', use_column_width=True)
+    # Make a prediction
+    prediction = predict(image)
+    if prediction is not None:
+        predicted_class, predicted_prob, probabilities = prediction
+        # Show the predicted class and probability
+        st.write("Predicted class:", predicted_class)
+        st.write("Probability:", predicted_prob, "%")
+        # Show the probabilities for each class
+        for class_name, prob in zip(nama_class, probabilities):
+            st.write(class_name, ":", prob, "%")
+        # Get the location of the predicted class
+        class_location = class_locations[predicted_class]
+        # Add a marker to the map
+        folium.Marker(
+            location=[class_location['Latitude'], class_location['Longitude']],
+            popup=class_location['name'],
+            icon=folium.Icon(color='red', icon='info-sign')
+        ).add_to(m)
+        # Zoom to the location
+        m.fit_bounds([[class_location['Latitude'], class_location['Longitude']]])
+		# Show the class location
 
+        st.write("Address:", class_location)
 
-
-
-
-
-
-
-
-
-
-def cara_penggunaan():
-    st.title("Selamat datang di web aplikasi klasifikasi landmark 👋")
-    st.write("Cara penggunaan: ")
-    st.write("")
-    # Define the custom CSS class for the instructions
-    st.markdown(
-        """
-        <style>
-        .rounded-instructions {
-            border-radius: 10px;
-            box-shadow: 3px 3px 5px #999;
-            padding: 20px;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Display the instructions with the custom CSS class
-    st.markdown(
-        """
-        <div class="rounded-instructions">
-        <p>1. Pilih menu yang berada pada sidebar sebelah kiri untuk berpindah ke aplikasi utama 👈</p>
-        <p>2. Unggah gambar landmark dengan cara klik browse file.</p>
-        <p>3. Aplikasi ini akan mulai memprediksi landmark yang telah di unggah.</p>
-            <p>4. Aplikasi akan menampilkan probabilitas dari landmark yang diprediksi.</p>
-        <p>5. Aplikasi akan menampilkan lokasi landmark yang diprediksi pada peta.</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-    st.sidebar.success('''
-    Jika sudah membaca cara penggunaan. \n
-    Silahkan pilih menu untuk berpindah ke aplikasi utama ✅
-    ''')
-
-
-
-# Define the mapping demo function
-def aplikasi_utama():
-
-
-    # Set up the Streamlit app
-    array_color = '#00FFAB'
-    # Add a map to the app
-    geolocator = Nominatim(user_agent="Landmark", timeout=10)
-    location = geolocator.geocode("Indonesia") # Initial location
-    m = folium.Map(location=[location.latitude, location.longitude], zoom_start=5)
-
-
-
-    st.title("Klasifikasi Landmark")
-    st.write("Unggah gambar dan aplikasi akan mengklasifikasikannya ke dalam salah satu landmark berikut: 👇")
-    st.write(f'<span style="color:{array_color}">{nama_class}</span>', unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
-
-
-
-
-
-
-
-
-
-
-    if uploaded_file is not None:
-        # Read the image
-        image = Image.open(uploaded_file)
-        # Show the image
-        st.image(image, caption='Uploaded Image.', use_column_width=True)
-        # Make a prediction
-        prediction = predict(image)
-        if prediction is not None:
-            predicted_class, predicted_prob, probabilities = prediction
-            # Show the predicted class and probability
-            st.write("Predicted class:", predicted_class)
-            st.write("Probability:", predicted_prob, "%")
-            # Show the probabilities for each class
-            for class_name, prob in zip(nama_class, probabilities):
-                st.write(class_name, ":", prob, "%")
-            # Get the location of the predicted class
-            class_location = class_locations[predicted_class]
-            # Add a marker to the map
-            folium.Marker(
-                location=[class_location['Latitude'], class_location['Longitude']],
-                popup=class_location['name'],
-                icon=folium.Icon(color='red', icon='info-sign')
-            ).add_to(m)
-            # Zoom to the location
-            m.fit_bounds([[class_location['Latitude'], class_location['Longitude']]])
-            # Show the class location
-
-            st.write("Address:", class_location)
-
-            # Update the map
-            folium_static(m, width=700, height=500)
-
-page_names_to_funcs = {
-    "Cara Penggunaan": cara_penggunaan,
-    "Aplikasi Utama": aplikasi_utama,
-    "Tentang Aplikasi": tentang_aplikasi
-}
-
-demo_name = st.sidebar.selectbox("Menu", page_names_to_funcs.keys())
-page_names_to_funcs[demo_name]()
+        # Update the map
+        folium_static(m, width=700, height=500)
