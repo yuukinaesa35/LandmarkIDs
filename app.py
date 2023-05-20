@@ -64,13 +64,13 @@ def predict(image):
 
 
 def cara_penggunaan():
-    st.title("Tutorial")
-    st.write("Welcome to the tutorial page!")
-    st.write("Here is a brief tutorial on how to use the Landmark Image Classification app:")
-    st.write("1. Upload an image of a landmark in Indonesia.")
-    st.write("2. The app will predict the class of the landmark.")
-    st.write("3. The app will display the predicted class and probability.")
-    st.write("4. The app will display the location of the predicted class on a map.")
+    st.title("Cara Penggunaan")
+    st.write("Berikut ini adalah cara penggunaan aplikasi klasifikasi landmark:")
+    st.write("1. Pilih menu yang berada pada sidebar sebelah kiri untuk berpindah ke aplikasi utama")
+    st.write("2. Unggah gambar landmark dengan cara klik browse file.")
+    st.write("3. Aplikasi ini akan mulai memprediksi landmark yang telah di unggah")
+    st.write("4. Aplikasi akan menampilkan probabilitas dari landmark yang diprediksi.")
+    st.write("5. Aplikasi akan menampilkan lokasi landmark yang diprediksi pada peta.")
 
     st.sidebar.success('''
     Jika sudah membaca cara penggunaan. \n
